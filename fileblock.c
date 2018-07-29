@@ -7,36 +7,37 @@ extern FileBlock *FileBlockhead;
 extern FileBlock *FileBlocktail;
 
 /**
- * appendFileBlock - append a FileBlock to the list
+ * appendFileBlock - append a FileBlock to the list.
+ * If this fails, you probably want to stop as out of memory.
  *
  * @type: string. type of block appended
  * @len: length of block appended
- * @data: data to append
+ * @data: data to append.
  *
- * Return: 1 if successful, 0 otherwise
+ * Return: 0 if successful, -1 on alloc error
  */
 int appendFileBlock(char *type, size_t len, char *data)
 {
 	FileBlock *newblock;
 
 	if (type == NULL || len < 1 || data == NULL)
-		return (0);
+		return (-1);
 	newblock = malloc(sizeof(FileBlock));
 	if (newblock == NULL)
-		return (0);
+		return (-1);
 	newblock->type = strdup(type);
 	if (newblock->type == NULL)
 	{
 		free(newblock);
-		return (0);
+		return (-1);
 	}
 	newblock->len = len;
-	newblock->data = strdup(data);
+	newblock->data = strndup(data, len);
 	if (newblock->data == NULL)
 	{
 		free(newblock->type);
 		free(newblock);
-		return (0);
+		return (-1);
 	}
 	if (FileBlockhead == NULL)
 	{
@@ -47,7 +48,7 @@ int appendFileBlock(char *type, size_t len, char *data)
 		FileBlocktail->next = newblock;
 		FileBlocktail = newblock;
 	}
-	return (1);
+	return (0);
 }
 
 /**
@@ -66,6 +67,7 @@ int writeFileBlock(FILE *fd)
 	{
 		bytes = fwrite(head->data, 1, head->len, fd);
 		if (bytes != head->len)
-			return (0);
+			return (-1);
 	}
+	return (0);
 }
