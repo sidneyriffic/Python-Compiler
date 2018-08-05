@@ -25,6 +25,8 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
 	new->flags = flags;
 	new->next = NULL;
 	new->datahead = NULL;
+	/* currently unused values set to 0 */
+	new->sh_link = new->sh_info = new->sh_addralign = new->sh_entsize = 0;
 	if (SectHeaderhead == NULL)
 		SectHeaderhead = new;
 	else
@@ -64,8 +66,6 @@ int appendsectdata(char *section, char *data, size_t len)
 	strncpy(new->data, data, len);
 	new->len = len;
 	new->next = NULL;
-	/* currently unused values set to 0 */
-	sh_link = sh_info = sh_addralign = sh_entsize = 0;
 	if (ptr->data == NULL)
 		ptr->data = new;
 	else
