@@ -2,6 +2,7 @@
 #define PROGHEADER_H
 
 #include <elf.h>
+#include <stdio.h>
 
 /**
  * ProgHeadBlock - program header entry block
@@ -19,9 +20,8 @@
  * @index: index in program header table
  * @next: next program header block
  */
-typdef struct ProgHeaderBlock
+typedef struct ProgHeaderBlock
 {
-	char *name;
 	Elf64_Word p_type;
 	Elf64_Word p_flags;
 	Elf64_Off p_offset;		/* Segment file offset */
@@ -30,14 +30,11 @@ typdef struct ProgHeaderBlock
 	Elf64_Xword p_filesz;		/* Segment size in file */
 	Elf64_Xword p_memsz;		/* Segment size in memory */
 	Elf64_Xword p_align;		/* Segment alignment, file & memory */
-	int index;
 	struct ProgHeaderBlock *next;
 } ProgHeaderBlock;
 
-ProgHeaderBlock *ProgHeaderhead = NULL;
-
-int addProgHeader(type name index flags);
-int sizeProgHeader();
-int writeProgHeader();
+int addProgHeader(Elf64_Word type, Elf64_Word flags, Elf64_Off offset,
+		  Elf64_Addr address, Elf64_Xword size);
+int writeProgHeadertable(FILE *fd);
 
 #endif

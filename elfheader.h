@@ -24,7 +24,7 @@
  * Comments below contain 64 bit sizes. Eventually error checking should be
  * moved into functions, but for now it is done manually.
  */
-typdef struct ElfHeaderBlock
+typedef struct ElfHeaderBlock
 {
 	unsigned char e_ident[EI_NIDENT];	/* ELF "magic number" */
 	Elf64_Half e_type;
@@ -41,9 +41,6 @@ typdef struct ElfHeaderBlock
 	Elf64_Half e_shnum;
 	Elf64_Half e_shstrndx;
 } ElfHeaderBlock;
-
-ElfHeaderBlock elfheaderdata = NULL;
-Elf64_Addr programexecentry = NULL;
 
 int initelfheader();
 int setelfoffsize();

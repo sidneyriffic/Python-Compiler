@@ -2,6 +2,7 @@
 #define SECTHEADER_H
 
 #include <elf.h>
+#include <stddef.h>
 
 /**
  * SectionData - data storage list for section data. machine code, strings, etc
@@ -14,7 +15,7 @@ typedef struct SectData
 	char *data;
 	size_t len;
 	struct SectData *next;
-}
+} SectData;
 
 /**
  * SectHeadBlock - section header entry block
@@ -31,10 +32,10 @@ typedef struct SectData
  * @sh_addralign: alignment of section. must be power of two
  * @sh_entsize: size, in bytes, of each entry in section for sections with
  * fixed-size entries. Otherwise 0.
- * @datahead: head of data linked list
+ * @data: head of data linked list
  * @next: next structure header block
  */
-typdef struct SectHeaderBlock
+typedef struct SectHeaderBlock
 {
 	char *name;
 	Elf64_Word sh_name;		/* Section name, index in string tbl */
@@ -47,15 +48,12 @@ typdef struct SectHeaderBlock
 	Elf64_Word sh_info;		/* Additional section information */
 	Elf64_Xword sh_addralign;	/* Section alignment */
 	Elf64_Xword sh_entsize;	/* Entry size if section holds table */
-	SectData *datahead;
+	SectData *data;
 	struct SectHeaderBlock *next;
 } SectHeaderBlock;
 
-/* head of section header list */
-SectHeaderBlock *SectHeaderhead = NULL;
-
 int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags);
-int appendsectdata(char *section, char *data);
+int appendsectdata(char *section, char *data, size_t len);
 int sizeSectHeaders();
 SectHeaderBlock *getSectHeader(char *name);
 int offSectHeader(char *name, Elf64_Off offset);

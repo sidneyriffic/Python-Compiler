@@ -1,6 +1,7 @@
 #include "elfheader.h"
+#include <string.h>
 
-extern ElfHeaderBlock elfheaderdata;
+ElfHeaderBlock elfheaderdata;
 
 /**
  * writeelfheader - write elf header to FileBlock list. Eventually this might
@@ -19,12 +20,12 @@ int initelfheader()
 	char headerchars[64] = "\x7f""ELF";
 
 	/* temporarily explicitly coding for one system */
-	elfheaderdata.e_ident = "\x7f""ELF" /* magic */
-		"\x02" /* 1 for 32-bit, 2 for 64-bit */
-		"\x01" /* 1 for little endian, 2 for big */
-		"\x01" /* 1 for original version of elf */
-		"\x00\x00" /* OSABI, set to unix systemv here */
-		"\x00\x00\x00\x00\x00\x00\x00"; /* padding */
+	strcpy(elfheaderdata.e_ident, "\x7f""ELF" /* magic */
+	       "\x02" /* 1 for 32-bit, 2 for 64-bit */
+	       "\x01" /* 1 for little endian, 2 for big */
+	       "\x01" /* 1 for original version of elf */
+	       "\x00\x00" /* OSABI, set to unix systemv here */
+	       "\x00\x00\x00\x00\x00\x00\x00"); /* padding */
 	/* object type, 0x02 for exec */
 	elfheaderdata.e_type = ET_EXEC;
 	/* machine type */

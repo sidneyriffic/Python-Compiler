@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+SectHeaderBlock *SectHeaderhead = NULL;
+
 /**
  * addSectHeader - add a new section header entry. If it exists, do nothing.
  *
@@ -21,12 +23,14 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
 		free(new);
 		return (-1);
 	}
-	new->type = type;
-	new->flags = flags;
+	new->sh_type = type;
+	new->sh_flags = flags;
+	new->sh_size = 0;
 	new->next = NULL;
-	new->datahead = NULL;
+	new->data = NULL;
 	/* currently unused values set to 0 */
 	new->sh_link = new->sh_info = new->sh_addralign = new->sh_entsize = 0;
+	new->sh_name = 0;
 	if (SectHeaderhead == NULL)
 		SectHeaderhead = new;
 	else
@@ -48,15 +52,15 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
  */
 int appendsectdata(char *section, char *data, size_t len)
 {
-	SectHeaderBlock *ptr, *new;
-	SectData *dptr;
+	SectHeaderBlock *ptr;
+	SectData *dptr, *new;
 
-	for (ptr = SectHeaderhead; strcmp(ptr->name, section) && ptr != NULL;)
+	for (ptr = SectHeaderhead;strcmp(ptr->name, section) && ptr != NULL;)
 		ptr = ptr->next;
 	if (ptr == NULL)
 		return (1);
 
-	if ((new = malloc(sizeof(SectionData))) == NULL)
+	if ((new = malloc(sizeof(SectData))) == NULL)
 		return (-1);
 	if ((new->data = malloc(len)) == NULL)
 	{
@@ -104,11 +108,11 @@ int sizeSectHeaders()
  *
  * Return: pointer to SectHeaderBlock, NULL if not found
  */
-SectHeaderBlock getSectHeader(char *name)
+SectHeaderBlock *getSectHeader(char *name)
 {
 	SectHeaderBlock *ptr;
 
-	for (ptr = SectHeaderBlockhead; ptr != NULL; ptr = ptr->next)
+	for (ptr = SectHeaderhead; ptr != NULL; ptr = ptr->next)
 		if (!strcmp(ptr->name, name))
 			return (ptr);
 	return (NULL);
