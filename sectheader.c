@@ -2,8 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-extern SectHeaderBlock *SectHeaderhead;
-
 /**
  * addSectHeader - add a new section header entry. If it exists, do nothing.
  *
@@ -49,6 +47,7 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
 int appendsectdata(char *section, char *data, size_t len)
 {
 	SectHeaderBlock *ptr, *new;
+	SectData *dptr;
 
 	for (ptr = SectHeaderhead; strcmp(ptr->name, section) && ptr != NULL;)
 		ptr = ptr->next;
@@ -65,13 +64,35 @@ int appendsectdata(char *section, char *data, size_t len)
 	strncpy(new->data, data, len);
 	new->len = len;
 	new->next = NULL;
+	/* currently unused values set to 0 */
+	sh_link = sh_info = sh_addralign = sh_entsize = 0;
 	if (ptr->data == NULL)
 		ptr->data = new;
 	else
 	{
-		for(ptr = ptr->data; ptr->next != NULL; ptr = ptr->next)
+		for(dptr = ptr->data; dptr->next != NULL; dptr = dptr->next)
 			;
-		ptr->next = new;
+		dptr->next = new;
+	}
+	return (0);
+}
+
+/**
+ * sizeSectHeaders - set size variables for all section headers
+ *
+ * Return: 0 if successful
+ */
+int sizeSectHeaders()
+{
+	size_t len;
+	SectHeaderBlock *ptr;
+	SectData *dptr;
+
+	for (ptr = SectHeaderhead; ptr != NULL; ptr = ptr->next)
+	{
+		for (dptr = ptr->data; dptr != NULL; dptr = dptr->next)
+			len += dptr->len;
+		ptr->sh_size = len;
 	}
 	return (0);
 }
