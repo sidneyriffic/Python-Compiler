@@ -96,3 +96,20 @@ int sizeSectHeaders()
 	}
 	return (0);
 }
+
+/**
+ * getSectHeader - get a pointer to a section header block by name
+ *
+ * @name: name of the section, omitting leading .
+ *
+ * Return: pointer to SectHeaderBlock, NULL if not found
+ */
+SectHeaderBlock getSectHeader(char *name)
+{
+	SectHeaderBlock *ptr;
+
+	for (ptr = SectHeaderBlockhead; ptr != NULL; ptr = ptr->next)
+		if (!strcmp(ptr->name, name))
+			return (ptr);
+	return (NULL);
+}

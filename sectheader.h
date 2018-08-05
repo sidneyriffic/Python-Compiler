@@ -57,6 +57,7 @@ SectHeaderBlock *SectHeaderhead = NULL;
 int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags);
 int appendsectdata(char *section, char *data);
 int sizeSectHeaders();
+SectHeaderBlock *getSectHeader(char *name);
 int offSectHeader(char *name, Elf64_Off offset);
 int writeSectHeader();
 
