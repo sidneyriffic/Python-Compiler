@@ -6,7 +6,7 @@
 /**
  * ElfHeaderBlock - stores elf header information
  *
- * @e_ident: magic number, class, data, version, OSABI, OSABI version
+ * @e_ident: magic number, class, endianness, data, version, OSABI, OSABIversion
  * @e_type: object file type, exec, dyn, etc
  * @e_machine: target instruction set architechture
  * @e_version: set to 1 for original ELF
@@ -26,7 +26,7 @@
  */
 typdef struct ElfHeaderBlock
 {
-	unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
+	unsigned char e_ident[EI_NIDENT];	/* ELF "magic number" */
 	Elf64_Half e_type;
 	Elf64_Half e_machine;
 	Elf64_Word e_version;
@@ -43,6 +43,7 @@ typdef struct ElfHeaderBlock
 } ElfHeaderBlock;
 
 ElfHeaderBlock elfheaderdata = NULL;
+Elf64_Addr programexecentry = NULL;
 
 int initelfheader();
 int setelfoffsize();

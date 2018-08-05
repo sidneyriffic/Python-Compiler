@@ -12,6 +12,7 @@
 typedef struct SectionData
 {
 	char *data;
+	size_t len;
 	struct SectionData *next;
 }
 
@@ -31,7 +32,7 @@ typedef struct SectionData
  * @sh_entsize: size, in bytes, of each entry in section for sections with
  * fixed-size entries. Otherwise 0.
  * @datahead: head of data linked list
- * @progidxs: program header indices to assign section to
+ * @next: next structure header block
  */
 typdef struct SectHeaderBlock
 {
@@ -47,13 +48,13 @@ typdef struct SectHeaderBlock
 	Elf64_Xword sh_addralign;	/* Section alignment */
 	Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 	SectionData *datahead;
-	int progidxs[4];
+	struct SectHeaderBlock *next;
 } SectHeaderBlock;
 
 /* head of section header list */
 SectHeaderBlock *SectHeaderhead = NULL;
 
-int addSectHeader(name type flags progheaderidxs);
+int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags);
 int appendsectdata(char *section, char *data);
 int sizeSectHeader();
 int writeSectHeader();
