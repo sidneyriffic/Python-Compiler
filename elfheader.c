@@ -1,7 +1,10 @@
 #include "elfheader.h"
+#include "progheader.h"
+#include "sectheader.h"
 #include <string.h>
 
 ElfHeaderBlock elfheaderdata;
+
 
 /**
  * writeelfheader - write elf header to FileBlock list. Eventually this might
@@ -32,57 +35,81 @@ int initelfheader()
 	elfheaderdata.e_machine = EM_X86_64;
 	/* elf version, set to 1 for original */
 	elfheaderdata.e_version = 1;
+	elfheaderdata.e_flags = 0;
 
 	return (0);
 }
 
 /**
  * setelfexec - set offset addresses and table sizes for elf header.
+ * To do this, all the program headers and sections will need to be sized.
+ * Section names are controlled by the compiler, so we will pick out exact
+ * names for ordering and assignment to program segments.
+ *
+ * After initial test, size var is to be reused to size every program segment
+ *
+ * lots of static settings to test simple file creation
+ *
+ * Return: 0 on success
  */
 int setelfoffsize()
 {
+	SectHeaderBlock *sectptr;
+	Elf64_Xword size;
+
+	elfheaderdata.e_ehsize = 0x40;
+	elfheaderdata.e_phoff = 0x40;
+	elfheaderdata.e_phentsize = 0x38;
+	elfheaderdata.e_phnum = 1;
+	elfheaderdata.e_shentsize = 0x40;
+	elfheaderdata.e_shnum = 0;
+	elfheaderdata.e_entry = 0x40;
+	sizeSectHeaders();
+	sectptr = getSectHeader("text");
+	size = sectptr->sh_size;
+	addProgHeader(PT_LOAD, PF_R + PF_X, 0, 0x400000, size);
+	/* not writing section table for now, but we would put the offset here
+	 * after size of data is calculated*/
+	elfheaderdata.e_shoff = 0;
+	elfheaderdata.e_shstrndx = 0;
 	return (0);
 }
 
-int writeelfheader()
+int writeelfheader(FILE *fd)
 {
+	fwrite(elfheaderdata.e_ident, 1, EI_NIDENT, fd);
+	fwrite(&elfheaderdata.e_type, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_machine, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_version, 1, sizeof(Elf64_Word), fd);
+	fwrite(&elfheaderdata.e_entry, 1, sizeof(Elf64_Addr), fd);
+	fwrite(&elfheaderdata.e_phoff, 1, sizeof(Elf64_Off), fd);
+	fwrite(&elfheaderdata.e_shoff, 1, sizeof(Elf64_Off), fd);
+	fwrite(&elfheaderdata.e_flags, 1, sizeof(Elf64_Word), fd);
+	fwrite(&elfheaderdata.e_ehsize, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_phentsize, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_phnum, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_shentsize, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_shnum, 1, sizeof(Elf64_Half), fd);
+	fwrite(&elfheaderdata.e_shstrndx, 1, sizeof(Elf64_Half), fd);
 	return (0);
 }
 
-/* old methodology. Preserving temporarily in case some of it is useful before
- * new method is done.
 /**
- * setelfproghead - set program header attributes. For now uses a char array.
- * Eventually want to use size_t input.
+ * writeelf - write the ELF file
  *
- * @startaddress: where the program header starts
- * @size: how large the program header block is
- * @num: number of entries
+ * Ordering:
+ * 1. Elf header
+ * 2. Program header table
+ * 3. Section data
+ * 3a. rodata
+ * 3b. text
+ * 4. Section header table
  *
- * Return: 0 on success, 1 on failure
-int setelfproghead(char *startaddress, char *size, char *num)
+ * Return: 0 if successful
+ */
+int writeelf(FILE *fd)
 {
-	strncpy(FileBlockhead->data + 32, startaddress, 8);
-	strncpy(FileBlockhead->data + 54, size, 2);
-	strncpy(FileBlockhead->data + 56, num, 2);
-	return (0);
+	writeelfheader(fd);
+	writeProgHeadertable(fd);
+	writeSectData("text", fd);
 }
-
-/**
- * setelfsecthead - set section header attributes. For now uses a char array.
- * Eventually want to use size_t input.
- *
- * @startaddress: where the section header starts
- * @size: how large the section header block is
- * @num: number of entries
- *
- * Return: 0 on success, 1 on failure
-int setelfsecthead(char *startaddress, char *size, char *num, char *index)
-{
-	strncpy(FileBlockhead->data + 40, startaddress, 8);
-	strncpy(FileBlockhead->data + 58, size, 2);
-	strncpy(FileBlockhead->data + 60, num, 2);
-	strncpy(FileBlockhead->data + 62, index, 2);
-	return (0);
-}
-*/

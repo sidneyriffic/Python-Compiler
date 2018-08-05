@@ -2,6 +2,7 @@
 #define ELFHEADER_H
 
 #include <elf.h>
+#include <stdio.h>
 
 /**
  * ElfHeaderBlock - stores elf header information
@@ -44,6 +45,7 @@ typedef struct ElfHeaderBlock
 
 int initelfheader();
 int setelfoffsize();
-int writeelfheader();
+int writeelfheader(FILE *fd);
+int writeelf();
 
 #endif
