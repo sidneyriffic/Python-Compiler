@@ -1,6 +1,7 @@
 #ifndef PROGHEADER_H
 #define PROGHEADER_H
 
+#include <elf.h>
 
 /**
  * ProgHeadBlock - program header entry block
@@ -15,18 +16,28 @@
  * @p_memsz: size in bytes of memory
  * @p_align: 0 and 1 no align. Otherwise should be a positive, integral power
  * of 2, with p_vaddr equating p_offset modulus p_align.
+ * @index: index in program header table
+ * @next: next program header block
  */
 typdef struct ProgHeaderBlock
 {
 	char *name;
-	char *p_type; // 4 bytes
-	char *p_flags; // 4 bytes
-	char *p_offset; // 8 bytes for 64bit, 4 for 32bit
-	char *p_vaddr; // 8 bytes for 64bit, 4 for 32bit
-	char *p_paddr; // 8 bytes for 64bit, 4 for 32bit
-	char *p_filesz; // 8 bytes for 64bit, 4 for 32bit
-	char *p_memsz; // 8 bytes for 64bit, 4 for 32bit
-	char *p_align; // 8 bytes for 64bit, 4 for 32bit
+	Elf64_Word p_type;
+	Elf64_Word p_flags;
+	Elf64_Off p_offset;		/* Segment file offset */
+	Elf64_Addr p_vaddr;		/* Segment virtual address */
+	Elf64_Addr p_paddr;		/* Segment physical address */
+	Elf64_Xword p_filesz;		/* Segment size in file */
+	Elf64_Xword p_memsz;		/* Segment size in memory */
+	Elf64_Xword p_align;		/* Segment alignment, file & memory */
+	int index;
+	struct ProgHeaderBlock *next;
 } ProgHeaderBlock;
+
+ProgHeaderBlock *ProgHeaderhead = NULL;
+
+int addProgHeader(type name index flags);
+int sizeProgHeader();
+int writeProgHeader();
 
 #endif

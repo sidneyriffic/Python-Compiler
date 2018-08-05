@@ -1,16 +1,12 @@
 #ifndef ELFHEADER_H
 #define ELFHEADER_H
 
+#include <elf.h>
+
 /**
  * ElfHeaderBlock - stores elf header information
  *
- * @magic: \x7fELF magic number
- * @ei_class: 1 for 32 bit, 2 for 64 bit
- * @ei_data: 1 for little, 2 for big endian
- * @ei_version: 1 for original ELF
- * @ei_osabi: target operating system ABI
- * @ei_abiversion: version of ABI
- * @ei_pad: unused space
+ * @e_ident: magic number, class, data, version, OSABI, OSABI version
  * @e_type: object file type, exec, dyn, etc
  * @e_machine: target instruction set architechture
  * @e_version: set to 1 for original ELF
@@ -30,33 +26,26 @@
  */
 typdef struct ElfHeaderBlock
 {
-	char *magic; // 4 bytes
-	char ei_class;
-	char ei_data;
-	char ei_version;
-	char ei_osabi;
-	char ei_abiversion;
-	char *ei_pad; // 7 bytes, currently unused
-	char *e_type; // 2 bytes
-	char *e_machine; // 2 bytes
-	char *e_version; // 4 bytes
-	char *e_entry; // exec entry. 8 bytes 64bit, 4 bytes 32bit
-	char *e_phoff; // 8 bytes
-	char *e_shoff; // 8 bytes
-	char *e_flags; // 4 bytes
-	char *e_ehsize; // 2 bytes
-	char *e_phentsize; // 2 bytes
-	char *e_phnum; // 2 bytes
-	char *e_shentsize; // 2 bytes
-	char *e_shnum; // 2 bytes
-	char *e_shstrndx; // 2 bytes
+	unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
+	Elf64_Half e_type;
+	Elf64_Half e_machine;
+	Elf64_Word e_version;
+	Elf64_Addr e_entry;		/* Entry point virtual address */
+	Elf64_Off e_phoff;		/* Program header table file offset */
+	Elf64_Off e_shoff;		/* Section header table file offset */
+	Elf64_Word e_flags;
+	Elf64_Half e_ehsize;
+	Elf64_Half e_phentsize;
+	Elf64_Half e_phnum;
+	Elf64_Half e_shentsize;
+	Elf64_Half e_shnum;
+	Elf64_Half e_shstrndx;
 } ElfHeaderBlock;
 
-ElfHeaderBlock elfheaderdata;
+ElfHeaderBlock elfheaderdata = NULL;
 
 int initelfheader();
-void setelfexec(char *address);
-int setelfproghead(char *startaddress, char *size, char *num);
-int setelfproghead(char *startaddress, char *size, char *num, char *index);
+int setelfoffsize();
+int writeelfheader();
 
 #endif

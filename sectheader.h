@@ -1,9 +1,10 @@
 #ifndef SECTHEADER_H
 #define SECTHEADER_H
 
+#include <elf.h>
 
 /**
- * SectionData - data storage list for section data
+ * SectionData - data storage list for section data. machine code, strings, etc
  *
  * @data: string of data
  * @next: next node in list
@@ -17,7 +18,7 @@ typedef struct SectionData
 /**
  * SectHeadBlock - section header entry block
  *
- * @name: compiler tracking name/id/etc
+ * @name: Human readable name. To be put in .shstrtab. Omit leading '.'
  * @sh_name: offset in .shstrtab section that represents name of section
  * @sh_type: type of header
  * @sh_flags: flag attributes
@@ -29,22 +30,32 @@ typedef struct SectionData
  * @sh_addralign: alignment of section. must be power of two
  * @sh_entsize: size, in bytes, of each entry in section for sections with
  * fixed-size entries. Otherwise 0.
- * @progtype: program block type to put this section into
  * @datahead: head of data linked list
+ * @progidxs: program header indices to assign section to
  */
 typdef struct SectHeaderBlock
 {
 	char *name;
-	char *p_type; // 4 bytes
-	char *p_flags; // 4 bytes
-	char *p_offset; // 8 bytes for 64bit, 4 for 32bit
-	char *p_vaddr; // 8 bytes for 64bit, 4 for 32bit
-	char *p_paddr; // 8 bytes for 64bit, 4 for 32bit
-	char *p_filesz; // 8 bytes for 64bit, 4 for 32bit
-	char *p_memsz; // 8 bytes for 64bit, 4 for 32bit
-	char *p_align; // 8 bytes for 64bit, 4 for 32bit
-	char progtype;
+	Elf64_Word sh_name;		/* Section name, index in string tbl */
+	Elf64_Word sh_type;		/* Type of section */
+	Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+	Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+	Elf64_Off sh_offset;		/* Section file offset */
+	Elf64_Xword sh_size;		/* Size of section in bytes */
+	Elf64_Word sh_link;		/* Index of another section */
+	Elf64_Word sh_info;		/* Additional section information */
+	Elf64_Xword sh_addralign;	/* Section alignment */
+	Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 	SectionData *datahead;
+	int progidxs[4];
 } SectHeaderBlock;
+
+/* head of section header list */
+SectHeaderBlock *SectHeaderhead = NULL;
+
+int addSectHeader(name type flags progheaderidxs);
+int appendsectdata(char *section, char *data);
+int sizeSectHeader();
+int writeSectHeader();
 
 #endif
