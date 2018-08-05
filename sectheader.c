@@ -52,10 +52,11 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
  */
 int appendsectdata(char *section, char *data, size_t len)
 {
-	SectHeaderBlock *ptr;
+	SectHeaderBlock *ptr = SectHeaderhead;
 	SectData *dptr, *new;
+	size_t offset = 0;
 
-	for (ptr = SectHeaderhead;strcmp(ptr->name, section) && ptr != NULL;)
+	while (strcmp(ptr->name, section) && ptr != NULL)
 		ptr = ptr->next;
 	if (ptr == NULL)
 		return (1);
@@ -74,9 +75,11 @@ int appendsectdata(char *section, char *data, size_t len)
 	else
 	{
 		for(dptr = ptr->data; dptr->next != NULL; dptr = dptr->next)
-			;
+			offset += dptr->offset;
+		offset += dptr->offset;
 		dptr->next = new;
 	}
+	new->offset = offset;
 	return (0);
 }
 

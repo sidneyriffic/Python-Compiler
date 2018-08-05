@@ -8,12 +8,15 @@
  * SectionData - data storage list for section data. machine code, strings, etc
  *
  * @data: string of data
+ * @len: length of data
+ * @offset: offset inside section
  * @next: next node in list
  */
 typedef struct SectData
 {
 	char *data;
 	size_t len;
+	size_t offset;
 	struct SectData *next;
 } SectData;
 
