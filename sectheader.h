@@ -9,11 +9,11 @@
  * @data: string of data
  * @next: next node in list
  */
-typedef struct SectionData
+typedef struct SectData
 {
 	char *data;
 	size_t len;
-	struct SectionData *next;
+	struct SectData *next;
 }
 
 /**
@@ -47,7 +47,7 @@ typdef struct SectHeaderBlock
 	Elf64_Word sh_info;		/* Additional section information */
 	Elf64_Xword sh_addralign;	/* Section alignment */
 	Elf64_Xword sh_entsize;	/* Entry size if section holds table */
-	SectionData *datahead;
+	SectData *datahead;
 	struct SectHeaderBlock *next;
 } SectHeaderBlock;
 
@@ -56,7 +56,8 @@ SectHeaderBlock *SectHeaderhead = NULL;
 
 int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags);
 int appendsectdata(char *section, char *data);
-int sizeSectHeader();
+int sizeSectHeaders();
+int offSectHeader(char *name, Elf64_Off offset);
 int writeSectHeader();
 
 #endif
