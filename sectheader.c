@@ -59,7 +59,6 @@ int appendsectdata(char *section, char *data, size_t len)
 		ptr = ptr->next;
 	if (ptr == NULL)
 		return (1);
-
 	if ((new = malloc(sizeof(SectData))) == NULL)
 		return (-1);
 	if ((new->data = malloc(len)) == NULL)
@@ -67,7 +66,7 @@ int appendsectdata(char *section, char *data, size_t len)
 		free(new);
 		return (-1);
 	}
-	strncpy(new->data, data, len);
+	memcpy(new->data, data, 16);
 	new->len = len;
 	new->next = NULL;
 	if (ptr->data == NULL)
@@ -88,7 +87,7 @@ int appendsectdata(char *section, char *data, size_t len)
  */
 int sizeSectHeaders()
 {
-	size_t len;
+	size_t len = 0;
 	SectHeaderBlock *ptr;
 	SectData *dptr;
 
@@ -116,4 +115,19 @@ SectHeaderBlock *getSectHeader(char *name)
 		if (!strcmp(ptr->name, name))
 			return (ptr);
 	return (NULL);
+}
+
+/**
+ * writeSectData - write data from a section to file
+ *
+ * @name: name of section, omitting the .
+ * @fd: FILE* to write to
+ *
+ * Return: 0 if successful
+ */
+int writeSectData(char *name, FILE *fd)
+{
+	SectData *ptr = getSectHeader(name)->data;
+
+	fwrite(ptr->data, 1, ptr->len, fd);
 }

@@ -63,15 +63,16 @@ int setelfoffsize()
 	elfheaderdata.e_phnum = 1;
 	elfheaderdata.e_shentsize = 0x40;
 	elfheaderdata.e_shnum = 0;
-	elfheaderdata.e_entry = 0x40;
+	elfheaderdata.e_entry = 0x400078;
 	sizeSectHeaders();
 	sectptr = getSectHeader("text");
 	size = sectptr->sh_size;
-	addProgHeader(PT_LOAD, PF_R + PF_X, 0, 0x400000, size);
+	addProgHeader(PT_LOAD, PF_R + PF_X, 0, 0x400000, size, 0x200000);
 	/* not writing section table for now, but we would put the offset here
 	 * after size of data is calculated*/
 	elfheaderdata.e_shoff = 0;
 	elfheaderdata.e_shstrndx = 0;
+//	addProgHeader(PT_GNU_STACK, PF_R + PF_W, 0, 0, 0, 0x10);
 	return (0);
 }
 

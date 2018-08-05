@@ -2,7 +2,7 @@
 #define SECTHEADER_H
 
 #include <elf.h>
-#include <stddef.h>
+#include <stdio.h>
 
 /**
  * SectionData - data storage list for section data. machine code, strings, etc
@@ -57,6 +57,7 @@ int appendsectdata(char *section, char *data, size_t len);
 int sizeSectHeaders();
 SectHeaderBlock *getSectHeader(char *name);
 int offSectHeader(char *name, Elf64_Off offset);
-int writeSectHeader();
+int writeSectHeadertable();
+int writeSectData(char *name, FILE *fd);
 
 #endif

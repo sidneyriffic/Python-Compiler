@@ -34,7 +34,7 @@ typedef struct ProgHeaderBlock
 } ProgHeaderBlock;
 
 int addProgHeader(Elf64_Word type, Elf64_Word flags, Elf64_Off offset,
-		  Elf64_Addr address, Elf64_Xword size);
+		  Elf64_Addr address, Elf64_Xword size, Elf64_Xword align);
 int writeProgHeadertable(FILE *fd);
 
 #endif
