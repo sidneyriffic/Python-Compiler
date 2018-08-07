@@ -2,31 +2,47 @@
 #define SYMTABLE_H
 
 /* defines for use with SymbolEntry type */
-#define SYMT_REF 0
 #define SYMT_STRLIT 's'
 #define SYMT_VAR 'v'
 #define SYMT_FUNC 'f'
+
+#include "sectheader.h"
+
+/**
+ * SymbolRef - reference of symbol
+ *
+ * @name: name of symbol
+ * @dataptr: SectData entry of symbol/reference
+ * @next: next symbol in list in scope
+ * @scope: scope the entry is in
+ */
+typedef struct SymbolRef
+{
+	char *name;
+	SectData *dataptr;
+	SymbolEntry *next;
+	SymbolScope *scope;
+} SymbolRef;
+	
 
 /**
  * SymbolEntry - entry of symbol
  *
  * @name: name of symbol
  * @type: type of symbol entry
- * @section: section symbol data can be found in
- * @offset: offset in section of symbol
- * @size: size of entry in bytes
+ * @dataptr: SectData entry of symbol/reference
  * @reflist: list of references to symbol
  * @next: next symbol in list in scope
+ * @scope: scope the entry is in
  */
 typedef struct SymbolEntry
 {
 	char *name;
 	int type;
-	char *section;
-	size_t offset;
-	size_t size;
+	SectData *dataptr;
 	SymbolEntry *reflist;
 	SymbolEntry *next;
+	SymbolScope *scope;
 } SymbolEntry;
 
 /**
@@ -47,11 +63,13 @@ typedef struct SymbolScope
 	SymbolEntry *symlist;
 } SymbolScope;
 
-int addsubscope(SymbolScope *current, char *name);
-int addsymbol(char *scopename, char *section, char *symbolname,
-	      size_t offset, size_t size);
-int addsymbolref(char *scopename, char *section, char *symbolname,
-		 size_t offset, size_t size);
+int getSymbolScope(char *scope);
+SymbolScope *addsubscope(SymbolScope *current, char *name);
+int addSymbolScope(char *scopename, char *symbolname, int type,
+		   size_t offset, size_t size);
+int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
+		   int type, size_t size, char *data);
+int addSymbolRef(SymbolScope *scope, char *section, char *symbolname);
 int derefsymbols();
 
 #endif
