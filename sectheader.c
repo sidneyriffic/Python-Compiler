@@ -48,9 +48,9 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
  * @data: data to put into section
  * @len: length of data in bytes
  *
- * Return: 0 on success, 1 if section not found, -1 on alloc fail
+ * Return: address of new SectData on success, NULL otherwise
  */
-int appendsectdata(char *section, char *data, size_t len)
+SectData appendsectdata(char *section, char *data, size_t len)
 {
 	SectHeaderBlock *ptr = SectHeaderhead;
 	SectData *dptr, *new;
@@ -59,17 +59,18 @@ int appendsectdata(char *section, char *data, size_t len)
 	while (strcmp(ptr->name, section) && ptr != NULL)
 		ptr = ptr->next;
 	if (ptr == NULL)
-		return (1);
+		return (NULL);
 	if ((new = malloc(sizeof(SectData))) == NULL)
-		return (-1);
+		return (NULL);
 	if ((new->data = malloc(len)) == NULL)
 	{
 		free(new);
-		return (-1);
+		return (NULL);
 	}
 	memcpy(new->data, data, 16);
 	new->len = len;
 	new->next = NULL;
+	new->parent = ptr;
 	if (ptr->data == NULL)
 		ptr->data = new;
 	else
@@ -80,7 +81,7 @@ int appendsectdata(char *section, char *data, size_t len)
 		dptr->next = new;
 	}
 	new->offset = offset;
-	return (0);
+	return (new);
 }
 
 /**
