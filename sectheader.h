@@ -4,6 +4,8 @@
 #include <elf.h>
 #include <stdio.h>
 
+struct SectHeaderBlock;
+
 /**
  * SectionData - data storage list for section data. machine code, strings, etc
  *
@@ -18,7 +20,7 @@ typedef struct SectData
 	char *data;
 	size_t len;
 	size_t offset;
-	SectHeaderBlock *parent;
+	struct SectHeaderBlock *parent;
 	struct SectData *next;
 } SectData;
 

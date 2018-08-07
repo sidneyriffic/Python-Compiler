@@ -1,11 +1,13 @@
 #include "symtable.h"
 #include "platdefines.h"
 #include <string.h>
+#include <stdlib.h>
 
 SymbolScope globalscope = { "global", NULL, NULL, NULL, NULL };
+SymbolList *headSymbolList = NULL;
 
 /**
- * getscope - get scope address from symbol table. Searches from given scope
+ * getSymbolScope - get scope address from symbol table. Searches from given scope
  * down through children.
  *
  * @scopename: name of scope
@@ -13,16 +15,17 @@ SymbolScope globalscope = { "global", NULL, NULL, NULL, NULL };
  *
  * Return: address of SymboleScope, null if not found
  */
-SymbolScope getscope(char *scopename, SymbolScope *scope)
+SymbolScope *getSymbolScope(char *scopename, SymbolScope *scope)
 {
 	SymbolScope *ptr, *ret;
+
 	if (scope == NULL)
-		scope = globalscope;
+		scope = &globalscope;
 	if (!strcmp(scopename, scope->name))
 		return (scope);
 	for (ptr = scope->subscopelist; ptr != NULL; ptr = ptr->next)
 	{
-		ret = getscope(scopename, scope);
+		ret = getSymbolScope(scopename, scope);
 		if (ret != NULL)
 			return (ret);
 	}
@@ -42,16 +45,13 @@ SymbolScope getscope(char *scopename, SymbolScope *scope)
 int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
 		   int type, size_t size, char *data)
 {
-	SectHeaderBlock *ptr = getSectHeader(section);
-	SymbolEntry *new, *ptr;
+	SymbolEntry *new, *symptr;
 	SectData *dataptr;
-
-	if (ptr == NULL)
-		return (1);
+	SymbolList *listptr, *newlist;
 
 	if ((new = malloc(sizeof(SymbolEntry))) == NULL)
 		return (-1);
-	dataptr = appendsectdata(section, data, len);
+	dataptr = appendsectdata(section, data, size);
 	if (dataptr == NULL)
 	{
 		free(new);
@@ -62,7 +62,14 @@ int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
 	{
 		free(dataptr);
 		free(new);
-		return (NULL);
+		return (-1);
+	}
+	if ((newlist = malloc(sizeof(SymbolList))) == NULL)
+	{
+		free(dataptr);
+		free(new->name);
+		free(new);
+		return (-1);
 	}
 	new->type = type;
 	new->dataptr = dataptr;
@@ -73,9 +80,19 @@ int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
 		scope->symlist = new;
 	else
 	{
-		for (ptr = scope->symlist; ptr->next != NULL;)
-			ptr = ptr->next;
-		ptr->next = new;
+		for (symptr = scope->symlist; symptr->next != NULL;)
+			symptr = symptr->next;
+		symptr->next = new;
+	}
+	newlist->symbol = new;
+	newlist->next = NULL;
+	if (headSymbolList == NULL)
+		headSymbolList = newlist;
+	else
+	{
+		for(listptr = headSymbolList; listptr->next != NULL;)
+			listptr = listptr->next;
+		listptr->next = newlist;
 	}
 	return (0);
 }
@@ -85,31 +102,37 @@ int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
  * SymbolEntry. Checks all parent scopes for reference of same name.
  *
  * @scope: scope reference is in
+ * @section: section ref is in
+ * @symbolname: name of symbol being referenced
+ * @offend: number of bytes after end of reference to end of instruction
  * 
- * Return: 0 if added successfully, -1 on alloc fail, 1 on success
+ * Return: 0 if added successfully, -1 on alloc fail
  */
-int addSymbolRef(SymbolScope scope, char *section, char *symbolname)
+int addSymbolRef(SymbolScope *scope, char *section, char *symbolname,
+		 size_t offend)
 {
-	SymbolEntry *ptr, *new;
-	SymbolRef *refptr;
-	SectData dataptr;
+	SymbolEntry *ptr;
+	SymbolRef *refptr, *new;
+	SectData *dataptr;
 
 	for (scope; scope != NULL; scope = scope->parent)
 		for (ptr = scope->symlist; ptr != NULL; ptr = ptr->next)
 			if (!strcmp(symbolname,  ptr->name))
 			    break;
 
-	if ((new = malloc(sizeof(SymbolEntry)) == NULL))
-		return (NULL);
+	if ((new = malloc(sizeof(SymbolEntry))) == NULL)
+		return (-1);
 	if (ptr->type == 's')
-		dataptr = appendsectdata(section, "        ", ADDRSIZE);
+		dataptr = appendsectdata(section, "\x00\x00\x00\x00"
+					 "\x00\x00\x00\x00", ADDRSIZE);
 	if (dataptr == NULL)
 	{
 		free(new);
-		return (NULL);
+		return (-1);
 	}
 	new->name = ptr->name;
 	new->dataptr = dataptr;
+	new->offend = offend;
 	new->next = NULL;
 	new->scope = scope;
 	if (ptr->reflist == NULL)
@@ -120,5 +143,44 @@ int addSymbolRef(SymbolScope scope, char *section, char *symbolname)
 			refptr = refptr->next;
 		refptr->next = new;
 	}
-	return (1);
+	return (0);
+}
+
+/**
+ * dereffileaddrsym - dereferences a symbol to a file address
+ *
+ * Return: 0 on success
+ */
+int dereffileaddrsym(SymbolEntry *symbol, SymbolRef *ref)
+{
+	size_t offset = 0;
+	SectData *symptr, *refptr;
+
+	symptr = symbol->dataptr;
+	refptr = ref->dataptr;
+	fprintf(stderr, "%lu, %lu, %lu, %lu\n", refptr->offset, refptr->parent->sh_offset, symptr->offset, symptr->parent->sh_offset);
+	offset = (symptr->offset + symptr->parent->sh_offset) -
+		(refptr->offset + refptr->parent->sh_offset + ref->offend);
+	memcpy(refptr->data, (char *) &offset, ADDRSIZE);
+	return (0);
+}
+
+/**
+ * derefsymbols - insert relevant data into all symbol references
+ *
+ * Return: 0 on success
+ */
+int derefsymbols()
+{
+	SymbolList *ptr = headSymbolList;
+	SymbolRef *refptr;
+
+	for (ptr = headSymbolList; ptr != NULL; ptr = ptr->next)
+		for (refptr = ptr->symbol->reflist; refptr != NULL;
+		     refptr = refptr->next)
+		{
+			if (ptr->symbol->type == 's')
+				dereffileaddrsym(ptr->symbol, refptr);
+		}
+	return (0);
 }

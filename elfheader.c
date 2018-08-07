@@ -1,6 +1,7 @@
 #include "elfheader.h"
 #include "progheader.h"
 #include "sectheader.h"
+#include "symtable.h"
 #include <string.h>
 
 ElfHeaderBlock elfheaderdata;
@@ -55,7 +56,7 @@ int initelfheader()
 int setelfoffsize()
 {
 	SectHeaderBlock *sectptr;
-	Elf64_Xword size;
+	Elf64_Xword size = 0;
 
 	elfheaderdata.e_ehsize = 0x40;
 	elfheaderdata.e_phoff = 0x40;
@@ -63,13 +64,27 @@ int setelfoffsize()
 	elfheaderdata.e_phnum = 1;
 	elfheaderdata.e_shentsize = 0x40;
 	elfheaderdata.e_shnum = 0;
-	elfheaderdata.e_entry = 0x400078;
 	sizeSectHeaders();
+	/* putting text section first */
 	sectptr = getSectHeader("text");
-	size = sectptr->sh_size;
+	/* elf header plus 1 prog header, hardcoded for now */
+	sectptr->sh_offset = 64 + 56;
+	/* putting start at beginning of text */
+	elfheaderdata.e_entry = sectptr->sh_offset + 0x400000;
+	size += sectptr->sh_size;
+	/* rodata second */
+	sectptr = getSectHeader("rodata");
+	if (sectptr != NULL)
+	{
+		/* offset is elf header + prog table + previous sections size */
+		sectptr->sh_offset = 64 + 56 + size;
+		size += sectptr->sh_size;
+	}
+	/* only adding regular load sections for now, so section size is prog
+	 * header LOAD size */
 	addProgHeader(PT_LOAD, PF_R + PF_X, 0, 0x400000, size, 0x200000);
 	/* not writing section table for now, but we would put the offset here
-	 * after size of data is calculated*/
+	 * after size of data is calculated */
 	elfheaderdata.e_shoff = 0;
 	elfheaderdata.e_shstrndx = 0;
 //	addProgHeader(PT_GNU_STACK, PF_R + PF_W, 0, 0, 0, 0x10);
@@ -113,4 +128,5 @@ int writeelf(FILE *fd)
 	writeelfheader(fd);
 	writeProgHeadertable(fd);
 	writeSectData("text", fd);
+	writeSectData("rodata", fd);
 }

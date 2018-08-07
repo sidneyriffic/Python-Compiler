@@ -50,7 +50,7 @@ int addSectHeader(char *name, Elf64_Word type, Elf64_Xword flags)
  *
  * Return: address of new SectData on success, NULL otherwise
  */
-SectData appendsectdata(char *section, char *data, size_t len)
+SectData *appendsectdata(char *section, char *data, size_t len)
 {
 	SectHeaderBlock *ptr = SectHeaderhead;
 	SectData *dptr, *new;
@@ -77,7 +77,7 @@ SectData appendsectdata(char *section, char *data, size_t len)
 	{
 		for(dptr = ptr->data; dptr->next != NULL; dptr = dptr->next)
 			offset += dptr->offset;
-		offset += dptr->offset;
+		offset += dptr->len;
 		dptr->next = new;
 	}
 	new->offset = offset;
@@ -133,5 +133,7 @@ int writeSectData(char *name, FILE *fd)
 {
 	SectData *ptr = getSectHeader(name)->data;
 
-	fwrite(ptr->data, 1, ptr->len, fd);
+	for (;ptr != NULL; ptr = ptr->next)
+		fwrite(ptr->data, 1, ptr->len, fd);
+	return (0);
 }
