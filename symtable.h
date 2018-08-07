@@ -15,7 +15,6 @@ struct SymbolScope;
  *
  * @name: name of symbol
  * @dataptr: SectData entry of symbol/reference
- * @offend: offset to end of instruction for %rip offset
  * @next: next symbol in list in scope
  * @scope: scope the entry is in
  */
@@ -23,7 +22,6 @@ typedef struct SymbolRef
 {
 	char *name;
 	SectData *dataptr;
-	size_t offend;
 	struct SymbolRef *next;
 	struct SymbolScope *scope;
 } SymbolRef;
@@ -85,8 +83,7 @@ int addSymbolScope(char *scopename, char *symbolname, int type,
 		   size_t offset, size_t size);
 int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
 		   int type, size_t size, char *data);
-int addSymbolRef(SymbolScope *scope, char *section, char *symbolname,
-		 size_t offend);
+int addSymbolRef(SymbolScope *scope, char *section, char *symbolname);
 int derefsymbols();
 
 #endif

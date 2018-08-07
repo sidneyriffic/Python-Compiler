@@ -104,12 +104,10 @@ int addSymbolEntry(SymbolScope *scope, char *section, char *symbolname,
  * @scope: scope reference is in
  * @section: section ref is in
  * @symbolname: name of symbol being referenced
- * @offend: number of bytes after end of reference to end of instruction
  * 
  * Return: 0 if added successfully, -1 on alloc fail
  */
-int addSymbolRef(SymbolScope *scope, char *section, char *symbolname,
-		 size_t offend)
+int addSymbolRef(SymbolScope *scope, char *section, char *symbolname)
 {
 	SymbolEntry *ptr;
 	SymbolRef *refptr, *new;
@@ -132,7 +130,6 @@ int addSymbolRef(SymbolScope *scope, char *section, char *symbolname,
 	}
 	new->name = ptr->name;
 	new->dataptr = dataptr;
-	new->offend = offend;
 	new->next = NULL;
 	new->scope = scope;
 	if (ptr->reflist == NULL)
@@ -160,7 +157,7 @@ int dereffileaddrsym(SymbolEntry *symbol, SymbolRef *ref)
 	refptr = ref->dataptr;
 	fprintf(stderr, "%lu, %lu, %lu, %lu\n", refptr->offset, refptr->parent->sh_offset, symptr->offset, symptr->parent->sh_offset);
 	offset = (symptr->offset + symptr->parent->sh_offset) -
-		(refptr->offset + refptr->parent->sh_offset + ref->offend);
+		(refptr->offset + refptr->parent->sh_offset + refptr->len);
 	memcpy(refptr->data, (char *) &offset, ADDRSIZE);
 	return (0);
 }

@@ -23,7 +23,7 @@ int main()
 		       "\xb8\x01\x00\x00\x00"         /* mov $0x01,%eax */
 		       "\xba\x0e\x00\x00\x00"         /* mov $0x0f,%edx */
 		       "\x48\x8d\x35", 13);           /* lea - */
-	addSymbolRef(scope, "text", "mystrlit", 4);   /* - 0x??(%rip),rsi */
+	addSymbolRef(scope, "text", "mystrlit");   /* - 0x??(%rip),rsi */
 	appendsectdata("text", "\xbf\x01\x00\x00\x00" /* mov $0x01,%edi */
 		       "\x0f\x05", 7);                /*syscall*/
 
